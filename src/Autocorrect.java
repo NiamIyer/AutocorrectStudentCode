@@ -3,6 +3,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Array;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 /**
  * Autocorrect
@@ -33,15 +34,22 @@ public class Autocorrect {
      * to threshold, sorted by edit distnace, then sorted alphabetically.
      */
     public String[] runTest(String typed) {
-        ArrayList<String> validWords = new ArrayList<String>();
+        ArrayList<Pair> validWords = new ArrayList<Pair>();
         int currWordInDict = 0;
         while (currWordInDict < words.length) {
-            if (findDist(words[currWordInDict], typed) < threshold) {
-                validWords.add(words[currWordInDict]);
+            int dist = findDist(words[currWordInDict], typed);
+            if (dist <= threshold) {
+                validWords.add(new Pair(words[currWordInDict], dist));
             }
             currWordInDict ++;
         }
-        return new String[0];
+        validWords.sort(Comparator.comparing(Pair::getWord));
+        validWords.sort(Comparator.comparing(Pair::getEditDistance));
+        String[] finalWords = new String[validWords.size()];
+        for (int i = 0; i < finalWords.length; i++) {
+            finalWords[i] = validWords.get(i).getWord();
+        }
+        return finalWords;
     }
 
     public int findDist(String word1, String word2) {
