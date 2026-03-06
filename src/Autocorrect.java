@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.Array;
+import java.util.ArrayList;
 
 /**
  * Autocorrect
@@ -17,8 +19,11 @@ public class Autocorrect {
      * @param words The dictionary of acceptable words.
      * @param threshold The maximum number of edits a suggestion can have.
      */
+    private String[] words;
+    private int threshold;
     public Autocorrect(String[] words, int threshold) {
-
+        this.words = words;
+        this.threshold = threshold;
     }
 
     /**
@@ -28,9 +33,45 @@ public class Autocorrect {
      * to threshold, sorted by edit distnace, then sorted alphabetically.
      */
     public String[] runTest(String typed) {
-
+        ArrayList<String> validWords = new ArrayList<String>();
+        int currWordInDict = 0;
+        while (currWordInDict < words.length) {
+            if (findDist(words[currWordInDict], typed) < threshold) {
+                validWords.add(words[currWordInDict]);
+            }
+            currWordInDict ++;
+        }
         return new String[0];
     }
+
+    public int findDist(String word1, String word2) {
+        int[][] levenshtein = new int[word1.length() + 1][word2.length() + 1];
+        int tailBoth = 0;
+        int tail1 = 0;
+        int tail2 = 0;
+        for (int i = 0; i < word1.length() + 1; i++) {
+            levenshtein[i][0] = i;
+        }
+        for (int i = 0; i < word2.length() + 1; i++) {
+            levenshtein[0][i] = i;
+        }
+        for (int i = 1; i < word1.length() + 1; i++) {
+            for (int j = 1; j < word2.length() + 1; j++) {
+                if (word1.charAt(i - 1) == word2.charAt(j - 1)) {
+                    levenshtein[i][j] = levenshtein[i - 1][j - 1];
+                }
+                else {
+                    tailBoth = levenshtein[i - 1][j - 1] + 1;
+                    tail1   = levenshtein[i - 1][j] + 1;
+                    tail2   = levenshtein[i][j - 1] + 1;
+                    levenshtein[i][j] = Math.min(Math.min(tailBoth, tail1), tail2);
+                }
+            }
+        }
+        return levenshtein[word1.length()][word2.length()];
+    }
+
+
 
 
     /**
