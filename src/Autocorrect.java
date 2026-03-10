@@ -22,9 +22,49 @@ public class Autocorrect {
      */
     private String[] words;
     private int threshold;
+    private int[][] keyPos = {
+            {1,0},
+            {2,4},
+            {2,2},
+            {1,2},
+            {0,2},
+            {1,3},
+            {1,4},
+            {1,5},
+            {0,7},
+            {1,6},
+            {1,7},
+            {1,8},
+            {2,6},
+            {2,5},
+            {0,8},
+            {0,9},
+            {0,0},
+            {0,3},
+            {1,1},
+            {0,4},
+            {0,6},
+            {2,3},
+            {0,1},
+            {2,1},
+            {0,5},
+            {2,0}
+    };
     public Autocorrect(String[] words, int threshold) {
         this.words = words;
         this.threshold = threshold;
+    }
+
+    public double findKeyDist(char first, char second) {
+        char char1 = Character.toLowerCase(first);
+        char char2 = Character.toLowerCase(second);
+        int x1 = keyPos[char1 - 'a'][0];
+        int x2 = keyPos[char2 - 'a'][0];
+        int y1 = keyPos[char1 - 'a'][1];
+        int y2 = keyPos[char2 -'a'][1];
+        double distance = Math.sqrt( Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+        double modifiedDist = distance / Math.sqrt(85);
+        return modifiedDist;
     }
 
     /**
@@ -33,6 +73,7 @@ public class Autocorrect {
      * @return An array of all dictionary words with an edit distance less than or equal
      * to threshold, sorted by edit distnace, then sorted alphabetically.
      */
+
     public String[] runTest(String typed) {
         ArrayList<Pair> validWords = new ArrayList<Pair>();
         int currWordInDict = 0;
@@ -53,10 +94,10 @@ public class Autocorrect {
     }
 
     public int findDist(String word1, String word2) {
-        int[][] levenshtein = new int[word1.length() + 1][word2.length() + 1];
-        int tailBoth = 0;
-        int tail1 = 0;
-        int tail2 = 0;
+        double[][] levenshtein = new double[word1.length() + 1][word2.length() + 1];
+        double tailBoth = 0;
+        double tail1 = 0;
+        double tail2 = 0;
         for (int i = 0; i < word1.length() + 1; i++) {
             levenshtein[i][0] = i;
         }
@@ -69,14 +110,14 @@ public class Autocorrect {
                     levenshtein[i][j] = levenshtein[i - 1][j - 1];
                 }
                 else {
-                    tailBoth = levenshtein[i - 1][j - 1] + 1;
-                    tail1   = levenshtein[i - 1][j] + 1;
-                    tail2   = levenshtein[i][j - 1] + 1;
+                    tailBoth = levenshtein[i - 1][j - 1] + findKeyDist(word1.charAt(i - 1), word2.charAt(j - 1));;
+                    tail1 = levenshtein[i - 1][j] + 1;
+                    tail2 = levenshtein[i][j - 1] + 1;
                     levenshtein[i][j] = Math.min(Math.min(tailBoth, tail1), tail2);
                 }
             }
         }
-        return levenshtein[word1.length()][word2.length()];
+        return (int) levenshtein[word1.length()][word2.length()];
     }
 
 
